@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
@@ -106,16 +105,16 @@ export default function HiringProcessForm() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const { isLoaded: isSignInLoaded, signIn } = useSignIn();
   const { user } = useUser();
-  
+
   // Load saved form data and current step from localStorage on initial render
   useEffect(() => {
-    const savedStep = localStorage.getItem('hiringCurrentStep');
-    const savedFormData = localStorage.getItem('hiringFormData');
-    
+    const savedStep = localStorage.getItem("hiringCurrentStep");
+    const savedFormData = localStorage.getItem("hiringFormData");
+
     if (savedStep) {
       setCurrentStep(parseInt(savedStep, 10));
     }
-    
+
     if (savedFormData) {
       const formData = JSON.parse(savedFormData);
       if (formData.account) updateAccount(formData.account);
@@ -136,26 +135,26 @@ export default function HiringProcessForm() {
     mode: "onChange",
     defaultValues: {
       account: account || { plan: "free" },
-      contact: contact || { 
-        username: "", 
-        firstName: "", 
-        lastName: "", 
+      contact: contact || {
+        username: "",
+        firstName: "",
+        lastName: "",
         city: "",
         state: "",
         zip: "",
-        email: "", 
+        email: "",
         phone: "",
-        dateOfBirth: ""
+        dateOfBirth: "",
       },
       roles: roles || { onDemand: [], warehouse: [] },
-      password: ""
-    }
+      password: "",
+    },
   });
 
   // Function to handle next button click
   const handleNext = async () => {
     let canProceed = false;
-    
+
     // Validate the current step
     if (currentStep === 0) {
       canProceed = await trigger("account.plan");
@@ -167,14 +166,14 @@ export default function HiringProcessForm() {
     } else if (currentStep === 1) {
       canProceed = await trigger([
         "contact.username",
-        "contact.firstName", 
-        "contact.lastName", 
+        "contact.firstName",
+        "contact.lastName",
         "contact.city",
         "contact.state",
         "contact.zip",
-        "contact.email", 
+        "contact.email",
         "contact.phone",
-        "contact.dateOfBirth"
+        "contact.dateOfBirth",
       ]);
       if (canProceed) {
         const formData = watch();
@@ -194,20 +193,23 @@ export default function HiringProcessForm() {
         saveFormData(formData, currentStep + 1);
       }
     }
-    
+
     if (canProceed) {
       setCurrentStep(currentStep + 1);
     }
   };
-  
+
   // Function to save form data and current step to localStorage
-  const saveFormData = (formData, step) => {
-    localStorage.setItem('hiringFormData', JSON.stringify({
-      account: formData.account,
-      contact: formData.contact,
-      roles: formData.roles
-    }));
-    localStorage.setItem('hiringCurrentStep', step.toString());
+  const saveFormData = (formData: z.infer<typeof formSchema>, step: number) => {
+    localStorage.setItem(
+      "hiringFormData",
+      JSON.stringify({
+        account: formData.account,
+        contact: formData.contact,
+        roles: formData.roles,
+      })
+    );
+    localStorage.setItem("hiringCurrentStep", step.toString());
   };
 
   const onSubmit = async (data: any) => {
@@ -234,9 +236,9 @@ export default function HiringProcessForm() {
             roles: data.roles,
           })
         );
-        
+
         // Redirect to the Clerk signup page
-        router.push('/sign-up?redirect_url=/drive/dashboard');
+        router.push("/sign-up?redirect_url=/drive/dashboard");
       }
     } catch (error) {
       console.error("Error in form submission:", error);
@@ -254,32 +256,40 @@ export default function HiringProcessForm() {
         return (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <p className="text-muted-foreground">Select a plan that works for you</p>
+              <p className="text-muted-foreground">
+                Select a plan that works for you
+              </p>
             </div>
-            <RadioGroup value={watch("account.plan")} onValueChange={(value) => {
-              // We need to manually update the form value since we're using a controlled RadioGroup
-              const event = {
-                target: {
-                  name: "account.plan",
-                  value: value
-                }
-              };
-              register("account.plan").onChange(event);
-            }}>
+            <RadioGroup
+              value={watch("account.plan")}
+              onValueChange={(value) => {
+                // We need to manually update the form value since we're using a controlled RadioGroup
+                const event = {
+                  target: {
+                    name: "account.plan",
+                    value: value,
+                  },
+                };
+                register("account.plan").onChange(event);
+              }}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Card className={`h-full transition-all ${watch("account.plan") === "free" ? "border-lime-500 ring-1 ring-lime-500" : "border-gray-200"}`}>
+                  <Card
+                    className={`h-full transition-all ${watch("account.plan") === "free" ? "border-lime-500 ring-1 ring-lime-500" : "border-gray-200"}`}
+                  >
                     <CardHeader>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem 
-                          id="free-plan" 
-                          value="free" 
-                        />
+                        <RadioGroupItem id="free-plan" value="free" />
                         <CardTitle>
-                          <Label htmlFor="free-plan" className="cursor-pointer">Free Account</Label>
+                          <Label htmlFor="free-plan" className="cursor-pointer">
+                            Free Account
+                          </Label>
                         </CardTitle>
                       </div>
-                      <CardDescription>Get started with no upfront costs</CardDescription>
+                      <CardDescription>
+                        Get started with no upfront costs
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="mb-4">
@@ -302,20 +312,26 @@ export default function HiringProcessForm() {
                     </CardContent>
                   </Card>
                 </div>
-                
+
                 <div>
-                  <Card className={`h-full transition-all ${watch("account.plan") === "preferred" ? "border-lime-500 ring-1 ring-lime-500" : "border-gray-200"}`}>
+                  <Card
+                    className={`h-full transition-all ${watch("account.plan") === "preferred" ? "border-lime-500 ring-1 ring-lime-500" : "border-gray-200"}`}
+                  >
                     <CardHeader>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem 
-                          id="preferred-plan" 
-                          value="preferred" 
-                        />
+                        <RadioGroupItem id="preferred-plan" value="preferred" />
                         <CardTitle>
-                          <Label htmlFor="preferred-plan" className="cursor-pointer">Preferred</Label>
+                          <Label
+                            htmlFor="preferred-plan"
+                            className="cursor-pointer"
+                          >
+                            Preferred
+                          </Label>
                         </CardTitle>
                       </div>
-                      <CardDescription>Expedited onboarding process</CardDescription>
+                      <CardDescription>
+                        Expedited onboarding process
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="mb-4">
@@ -392,24 +408,24 @@ export default function HiringProcessForm() {
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  {...register("contact.city")}
-                  required
-                />
+                <Input id="city" {...register("contact.city")} required />
                 {errors.contact?.city && (
-                  <p className="text-red-500 text-sm">{errors.contact.city.message}</p>
+                  <p className="text-red-500 text-sm">
+                    {errors.contact.city.message}
+                  </p>
                 )}
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="state">State</Label>
-                  <Select 
-                    onValueChange={(value: string) => setValue("contact.state", value)}
+                  <Select
+                    onValueChange={(value: string) =>
+                      setValue("contact.state", value)
+                    }
                     defaultValue={watch("contact.state")}
                   >
                     <SelectTrigger id="state">
@@ -424,22 +440,22 @@ export default function HiringProcessForm() {
                     </SelectContent>
                   </Select>
                   {errors.contact?.state && (
-                    <p className="text-red-500 text-sm">{errors.contact.state.message}</p>
+                    <p className="text-red-500 text-sm">
+                      {errors.contact.state.message}
+                    </p>
                   )}
                 </div>
                 <div>
                   <Label htmlFor="zip">ZIP Code</Label>
-                  <Input
-                    id="zip"
-                    {...register("contact.zip")}
-                    required
-                  />
+                  <Input id="zip" {...register("contact.zip")} required />
                   {errors.contact?.zip && (
-                    <p className="text-red-500 text-sm">{errors.contact.zip.message}</p>
+                    <p className="text-red-500 text-sm">
+                      {errors.contact.zip.message}
+                    </p>
                   )}
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="email">Email</Label>
@@ -450,7 +466,9 @@ export default function HiringProcessForm() {
                     required
                   />
                   {errors.contact?.email && (
-                    <p className="text-red-500 text-sm">{errors.contact.email.message}</p>
+                    <p className="text-red-500 text-sm">
+                      {errors.contact.email.message}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -462,11 +480,13 @@ export default function HiringProcessForm() {
                     required
                   />
                   {errors.contact?.phone && (
-                    <p className="text-red-500 text-sm">{errors.contact.phone.message}</p>
+                    <p className="text-red-500 text-sm">
+                      {errors.contact.phone.message}
+                    </p>
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="dateOfBirth">Date of Birth (must be 18+)</Label>
                 <Input
@@ -476,7 +496,9 @@ export default function HiringProcessForm() {
                   required
                 />
                 {errors.contact?.dateOfBirth && (
-                  <p className="text-red-500 text-sm">{errors.contact.dateOfBirth.message}</p>
+                  <p className="text-red-500 text-sm">
+                    {errors.contact.dateOfBirth.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -487,42 +509,88 @@ export default function HiringProcessForm() {
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium mb-2">On-Demand Services</h3>
-              <p className="text-sm text-muted-foreground mb-4">Select the services you'd like to provide</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select the services you'd like to provide
+              </p>
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="lawncare" value="lawncare" {...register("roles.onDemand")} />
-                  <Label htmlFor="lawncare" className="font-normal">Lawncare</Label>
+                  <Checkbox
+                    id="lawncare"
+                    value="lawncare"
+                    {...register("roles.onDemand")}
+                  />
+                  <Label htmlFor="lawncare" className="font-normal">
+                    Lawncare
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="laundry" value="laundry" {...register("roles.onDemand")} />
-                  <Label htmlFor="laundry" className="font-normal">Laundry</Label>
+                  <Checkbox
+                    id="laundry"
+                    value="laundry"
+                    {...register("roles.onDemand")}
+                  />
+                  <Label htmlFor="laundry" className="font-normal">
+                    Laundry
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="lighting" value="lighting" {...register("roles.onDemand")} />
-                  <Label htmlFor="lighting" className="font-normal">Lighting</Label>
+                  <Checkbox
+                    id="lighting"
+                    value="lighting"
+                    {...register("roles.onDemand")}
+                  />
+                  <Label htmlFor="lighting" className="font-normal">
+                    Lighting
+                  </Label>
                 </div>
               </div>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-medium mb-2">Warehouse Positions</h3>
-              <p className="text-sm text-muted-foreground mb-4">Select any warehouse positions you're interested in</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select any warehouse positions you're interested in
+              </p>
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="plumbing" value="plumbing" {...register("roles.warehouse")} />
-                  <Label htmlFor="plumbing" className="font-normal">Plumbing</Label>
+                  <Checkbox
+                    id="plumbing"
+                    value="plumbing"
+                    {...register("roles.warehouse")}
+                  />
+                  <Label htmlFor="plumbing" className="font-normal">
+                    Plumbing
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="electrical" value="electrical" {...register("roles.warehouse")} />
-                  <Label htmlFor="electrical" className="font-normal">Electrical</Label>
+                  <Checkbox
+                    id="electrical"
+                    value="electrical"
+                    {...register("roles.warehouse")}
+                  />
+                  <Label htmlFor="electrical" className="font-normal">
+                    Electrical
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="carpentry" value="carpentry" {...register("roles.warehouse")} />
-                  <Label htmlFor="carpentry" className="font-normal">Carpentry</Label>
+                  <Checkbox
+                    id="carpentry"
+                    value="carpentry"
+                    {...register("roles.warehouse")}
+                  />
+                  <Label htmlFor="carpentry" className="font-normal">
+                    Carpentry
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="general" value="general" {...register("roles.warehouse")} />
-                  <Label htmlFor="general" className="font-normal">General Warehouse</Label>
+                  <Checkbox
+                    id="general"
+                    value="general"
+                    {...register("roles.warehouse")}
+                  />
+                  <Label htmlFor="general" className="font-normal">
+                    General Warehouse
+                  </Label>
                 </div>
               </div>
             </div>
@@ -532,12 +600,15 @@ export default function HiringProcessForm() {
         return (
           <div className="space-y-6">
             <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-              <h3 className="font-medium text-lg mb-4">Complete Your Registration</h3>
+              <h3 className="font-medium text-lg mb-4">
+                Complete Your Registration
+              </h3>
               <p className="text-sm text-muted-foreground mb-6">
-                You've completed the initial steps! Now, let's create your account.
-                Click the button below to proceed to our secure signup page.
+                You've completed the initial steps! Now, let's create your
+                account. Click the button below to proceed to our secure signup
+                page.
               </p>
-              
+
               <div className="flex items-start space-x-2 mb-6">
                 <Checkbox id="terms" required />
                 <Label htmlFor="terms" className="font-normal text-sm">
@@ -551,46 +622,52 @@ export default function HiringProcessForm() {
                   </a>
                 </Label>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button 
-                  type="button" 
-                  className="w-full bg-lime-500 hover:bg-lime-600" 
+                <Button
+                  type="button"
+                  className="w-full bg-lime-500 hover:bg-lime-600"
                   onClick={() => {
                     // Save form data to localStorage before redirecting
                     const formData = watch();
-                    localStorage.setItem('hiringFormData', JSON.stringify({
-                      account: formData.account,
-                      contact: formData.contact,
-                      roles: formData.roles
-                    }));
-                    
+                    localStorage.setItem(
+                      "hiringFormData",
+                      JSON.stringify({
+                        account: formData.account,
+                        contact: formData.contact,
+                        roles: formData.roles,
+                      })
+                    );
+
                     // Redirect to the Clerk signup page
-                    router.push('/sign-up?redirect_url=/drive/dashboard');
+                    router.push("/sign-up?redirect_url=/drive/dashboard");
                   }}
                 >
                   <Mail className="mr-2 h-4 w-4" />
                   Continue with Email
                 </Button>
-                
-                <Button 
-                  type="button" 
-                  variant="outline" 
+
+                <Button
+                  type="button"
+                  variant="outline"
                   className="w-full"
                   onClick={() => {
                     // Save form data to localStorage before redirecting
                     const formData = watch();
-                    localStorage.setItem('hiringFormData', JSON.stringify({
-                      account: formData.account,
-                      contact: formData.contact,
-                      roles: formData.roles
-                    }));
-                    
+                    localStorage.setItem(
+                      "hiringFormData",
+                      JSON.stringify({
+                        account: formData.account,
+                        contact: formData.contact,
+                        roles: formData.roles,
+                      })
+                    );
+
                     if (isSignInLoaded) {
                       signIn.authenticateWithRedirect({
                         strategy: "oauth_github",
                         redirectUrl: "/drive/dashboard",
-                        redirectUrlComplete: "/drive/dashboard"
+                        redirectUrlComplete: "/drive/dashboard",
                       });
                     }
                   }}
@@ -644,19 +721,19 @@ export default function HiringProcessForm() {
             {renderStep()}
             <div className="flex justify-between mt-6">
               {currentStep > 0 && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setCurrentStep(currentStep - 1)}
                   disabled={isLoading}
                 >
                   Back
                 </Button>
               )}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isLoading}
-                className={`${currentStep === 0 ? 'w-full' : 'ml-auto'} bg-lime-500 hover:bg-lime-600`}
+                className={`${currentStep === 0 ? "w-full" : "ml-auto"} bg-lime-500 hover:bg-lime-600`}
                 onClick={(e) => {
                   if (currentStep < steps.length - 1) {
                     e.preventDefault();
