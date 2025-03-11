@@ -1,4 +1,4 @@
-import { HiringProcessForm } from "@/components/drive/hiring-process-form";
+import HiringProcessForm from "@/components/drive/hiring-process-form";
 import {
   Card,
   CardContent,

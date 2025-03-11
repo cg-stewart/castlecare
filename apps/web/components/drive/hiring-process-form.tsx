@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHiringStore, formSchema } from "@/store/useHiringStore";
+import { z } from "zod";
 import { Button } from "@workspace/ui/components/button";
 import {
   Card,
@@ -26,7 +27,7 @@ import { toast } from "sonner";
 
 const steps = ["Account Type", "Contact Info", "Roles", "Sign Up"];
 
-export function HiringProcessForm() {
+export default function HiringProcessForm() {
   const {
     currentStep,
     setCurrentStep,
@@ -48,7 +49,7 @@ export function HiringProcessForm() {
     resolver: zodResolver(formSchema),
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
       updateAccount(data.account);
@@ -62,47 +63,29 @@ export function HiringProcessForm() {
           throw new Error("Authentication is not loaded");
         }
 
-        const result = await signUp.create({
+        // Store form data in localStorage to retrieve after Clerk signup
+        localStorage.setItem('hiringFormData', JSON.stringify({
+          account: data.account,
+          contact: data.contact,
+          roles: data.roles,
+        }));
+        
+        // Start the Clerk signup process
+        await signUp.create({
           firstName: data.contact.firstName,
           lastName: data.contact.lastName,
           emailAddress: data.contact.email,
           password: data.password,
         });
-
-        if (result.status === "complete") {
-          await setActive({ session: result.createdSessionId });
-
-          // Save application data to API
-          const response = await fetch("/api/submit-application", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              account: data.account,
-              contact: data.contact,
-              roles: data.roles,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to submit application");
-          }
-
-          reset();
-          router.push("/drive/dashboard");
-        } else {
-          throw new Error("Sign up failed");
-        }
+        
+        // Redirect to Clerk's hosted UI for completing the signup
+        // This will handle email verification and other Clerk processes
+        const signUpUrl = `${window.location.origin}/sign-up?redirect_url=${encodeURIComponent('/drive/complete-application')}`;
+        router.push(signUpUrl);
       }
     } catch (error) {
       console.error("Error in form submission:", error);
-      toast({
-        title: "Error",
-        description:
-          "There was a problem processing your request. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("There was a problem processing your request. Please try again.");
     } finally {
       setIsLoading(false);
     }

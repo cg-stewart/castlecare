@@ -145,7 +145,7 @@ export default function EarningsCalculator() {
                   min={currentService.jobsPerWeek.min}
                   max={currentService.jobsPerWeek.max}
                   step={1}
-                  onValueChange={(value) => setJobsPerWeek(value[0])}
+                  onValueChange={(value) => setJobsPerWeek(value[0] || currentService.jobsPerWeek.min)}
                   className="[&>span]:bg-lime-500"
                 />
                 <div className="flex justify-between text-sm text-muted-foreground">

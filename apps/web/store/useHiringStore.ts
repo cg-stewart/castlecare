@@ -23,6 +23,7 @@ export const formSchema = z.object({
   account: accountSchema,
   contact: contactSchema,
   roles: rolesSchema,
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 type HiringState = z.infer<typeof formSchema> & {
@@ -52,6 +53,7 @@ const initialState: Omit<
     onDemand: [],
     warehouse: [],
   },
+  password: "",
 };
 
 export const useHiringStore = create<HiringState>((set) => ({

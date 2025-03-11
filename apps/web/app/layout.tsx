@@ -5,6 +5,8 @@ import { Providers } from "@/components/providers"
 import { CartProvider } from "@/components/cart/cart-context"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Toaster } from "@workspace/ui/components/sonner"
+import Navbar from "@/components/layout/navbar"
+import Footer from "@/components/layout/footer"
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -23,16 +25,22 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-       <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}
-      >
-        <Providers>{children}</Providers><Toaster />
-      
-        
-      </body>
-    </html>
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
+        >
+          <Providers>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
+            <Toaster />
+          </Providers>
+        </body>
+      </html>
     </ClerkProvider>
-   
   )
 }
