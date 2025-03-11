@@ -2,14 +2,29 @@ import { create } from "zustand";
 import { z } from "zod";
 
 const accountSchema = z.object({
-  type: z.enum(["free", "preferred"]),
+  plan: z.enum(["free", "preferred"]),
 });
 
 const contactSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  zip: z.string().min(5, "ZIP code must be at least 5 digits"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  dateOfBirth: z.string().refine((dob) => {
+    // Check if user is over 18
+    const birthDate = new Date(dob);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      return age - 1 >= 18;
+    }
+    return age >= 18;
+  }, { message: "You must be at least 18 years old" }),
 });
 
 const rolesSchema = z.object({
@@ -41,13 +56,18 @@ const initialState: Omit<
 > = {
   currentStep: 0,
   account: {
-    type: "free",
+    plan: "free",
   },
   contact: {
+    username: "",
     firstName: "",
     lastName: "",
+    city: "",
+    state: "",
+    zip: "",
     email: "",
     phone: "",
+    dateOfBirth: "",
   },
   roles: {
     onDemand: [],

@@ -7,6 +7,7 @@ import { ClerkProvider } from "@clerk/nextjs"
 import { Toaster } from "@workspace/ui/components/sonner"
 import Navbar from "@/components/layout/navbar"
 import Footer from "@/components/layout/footer"
+import ClerkRedirectHandler from "@/components/clerk-redirect-handler"
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default function RootLayout({
               <Footer />
             </div>
             <Toaster />
+            <ClerkRedirectHandler />
           </Providers>
         </body>
       </html>
