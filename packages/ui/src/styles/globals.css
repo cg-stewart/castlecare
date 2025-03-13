@@ -69,7 +69,6 @@
   --ring: hsl(142 76% 46%);
 }
 
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

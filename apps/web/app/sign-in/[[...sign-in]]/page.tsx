@@ -1,5 +1,5 @@
-import { SignIn } from "@clerk/nextjs";
+import Login from "@/components/auth/login";
 
 export default function Page() {
-  return <SignIn />;
+  return <Login />;
 }

@@ -33,7 +33,7 @@ export default function DrivePage() {
         <BenefitsSection />
         <RequirementsSection />
         <EarningsCalculator />
-        <FutureRoles />
+
         <DriverFAQ />
         <AppPreview />
       </>

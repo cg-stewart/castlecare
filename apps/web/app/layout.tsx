@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google"
 
 import "@workspace/ui/globals.css"
-import { Providers } from "@/components/providers"
+import Providers from "@/components/providers"
 import { CartProvider } from "@/components/cart/cart-context"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Toaster } from "@workspace/ui/components/sonner"

@@ -3,19 +3,23 @@
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import { CartProvider } from "./cart/cart-context"
+import AuthProvider from "@/contexts/auth-context"
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider
       attribute="class"
       defaultTheme="light"
-      enableSystem
+      forcedTheme="light"
+      enableSystem={false}
       disableTransitionOnChange
       enableColorScheme
-    ><CartProvider>
-      {children}
-    </CartProvider>
-      
+    >
+      <AuthProvider>
+        <CartProvider>
+          {children}
+        </CartProvider>
+      </AuthProvider>
     </NextThemesProvider>
   )
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth, useUser } from "@clerk/nextjs";
 import { Button } from "@workspace/ui/components/button";
 import {
   Card,
@@ -10,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
+import { configureWorkerAuth, getAuthenticatedWorker, formatWorkerApplicationFromCognito, type AuthenticatedWorker, type WorkerApplication } from "@/lib/worker-auth";
 
 type Application = {
   account: { type: string };
@@ -18,70 +18,74 @@ type Application = {
 };
 
 export default function DriverDashboard() {
-  const { userId } = useAuth();
-  const { user, isLoaded: userLoaded } = useUser();
-  const [application, setApplication] = useState<Application | null>(null);
+  const [worker, setWorker] = useState<AuthenticatedWorker | null>(null);
+  const [workerLoaded, setWorkerLoaded] = useState(false);
+  const [application, setApplication] = useState<WorkerApplication | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    async function fetchApplication() {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
+    // Configure worker auth when component mounts
+    configureWorkerAuth();
+    
+    async function loadWorkerData() {
+      setLoading(true);
+      setError(null);
       
       try {
-        const response = await fetch(`/api/applications/${userId}`);
+        // Get worker data from Cognito
+        const workerData = await getAuthenticatedWorker();
         
-        if (response.ok) {
-          const data = await response.json();
-          setApplication(data);
-          console.log("Application data loaded:", data);
-        } else if (response.status === 404) {
-          // Application not found is a normal state, not an error
-          console.log("No application found for user");
-          setApplication(null);
-        } else {
-          // Handle other error states
-          try {
-            const errorData = await response.json();
-            console.error("Error response:", errorData);
-            setError(errorData.error || 'Failed to load application data');
-          } catch (jsonError) {
-            console.error("Error parsing response:", jsonError);
-            setError(`Server error: ${response.status}`);
+        if (workerData) {
+          setWorker(workerData);
+          setWorkerLoaded(true);
+          
+          // Check for application data in localStorage first
+          const savedData = localStorage.getItem("workerApplicationData");
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              setApplication(parsedData);
+              console.log("Application data loaded from localStorage:", parsedData);
+            } catch (parseError) {
+              console.error("Error parsing saved application data:", parseError);
+            }
+          } else {
+            // Format application data from Cognito attributes
+            const formattedData = formatWorkerApplicationFromCognito(workerData.attributes);
+            setApplication(formattedData);
+            
+            // Also save to localStorage for future use
+            localStorage.setItem("workerApplicationData", JSON.stringify(formattedData));
+            console.log("Application data formatted from Cognito:", formattedData);
           }
+        } else {
+          // No authenticated worker found
+          console.log("No authenticated worker found");
+          setApplication(null);
         }
       } catch (error) {
-        console.error("Error fetching application:", error);
-        setError('Network error. Please try again later.');
+        console.error("Error loading worker data:", error);
+        setError('Authentication error. Please sign in again.');
       } finally {
         setLoading(false);
       }
     }
     
-    // Reset states when userId changes
-    setLoading(true);
-    setError(null);
-    fetchApplication();
-  }, [userId]);
+    loadWorkerData();
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {userLoaded && user && (
+      {workerLoaded && worker && (
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold">Welcome, {user.firstName || 'Driver'}!</h1>
+            <h1 className="text-3xl font-bold">Welcome, {worker.attributes?.given_name || 'Driver'}!</h1>
             <p className="text-gray-600">Here's your application status and next steps</p>
           </div>
-          {user.imageUrl && (
-            <img 
-              src={user.imageUrl} 
-              alt="Profile" 
-              className="h-12 w-12 rounded-full border-2 border-lime-500"
-            />
-          )}
+          <div className="h-12 w-12 rounded-full border-2 border-lime-500 bg-lime-100 flex items-center justify-center text-lime-700 font-bold text-lg">
+            {worker.attributes?.given_name ? worker.attributes.given_name.charAt(0) : 'D'}
+          </div>
         </div>
       )}
       <h1 className="text-3xl font-bold mb-6">Driver Dashboard</h1>

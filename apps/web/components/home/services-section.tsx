@@ -1,10 +1,8 @@
 "use client";
 
-import { Input } from "@workspace/ui/components/input";
-import { cn } from "@workspace/ui/lib/utils";
-
-import { useState } from "react";
+import { useState, ReactElement } from "react";
 import { Check } from "lucide-react";
+import { Input } from "@workspace/ui/components/input";
 import { Button } from "@workspace/ui/components/button";
 import {
   Card,
@@ -13,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
-import { useCart } from "@/components/cart/cart-context";
 import {
   Tabs,
   TabsContent,
@@ -21,26 +18,123 @@ import {
   TabsTrigger,
 } from "@workspace/ui/components/tabs";
 import { Badge } from "@workspace/ui/components/badge";
+import { cn } from "@workspace/ui/lib/utils";
+import { useCart } from "@/components/cart/cart-context";
+
+// Define types for our data structure
+type PricingOption = {
+  id: string;
+  name: string;
+  subtitle: string;
+  price: number;
+  billingPeriod: string;
+  features: string[];
+  isPopular?: boolean;
+  type: string;
+  isComing?: boolean;
+};
+
+type Service = {
+  id: string;
+  name: string;
+  description: string;
+  icon: ({ className }: { className?: string }) => ReactElement;
+  serviceName: string;
+  tabs?: string[];
+  pricingOptions: PricingOption[];
+};
+
+// Service Icons Components
+const ServiceIcons = {
+  lawncare: ({ className }: { className?: string }) => (
+    <div className={cn("p-1 bg-green-100 rounded-full", className)}>
+      <svg
+        className={cn("w-5 h-5", className)}
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M21 14h-2V8h2v6Zm-4 7h-2V8h2v13Zm-8 0H7V3h2v18Zm-4 0H3v-6h2v6Z" />
+      </svg>
+    </div>
+  ),
+  laundry: ({ className }: { className?: string }) => (
+    <div className={cn("p-1 bg-blue-100 rounded-full", className)}>
+      <svg
+        className={cn("w-5 h-5", className)}
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M7 4c0-.55.45-1 1-1s1 .45 1 1-.45 1-1 1-1-.45-1-1m11 15-4-4v-2a2 2 0 1 0-4 0v6H6v-6a6 6 0 0 1 6-6c.68 0 1.34.12 1.95.34l-1.5 1.5A3.94 3.94 0 0 0 12 9c-2.2 0-4 1.8-4 4v2l-4 4h14Z" />
+      </svg>
+    </div>
+  ),
+  lighting: ({ className }: { className?: string }) => (
+    <div className={cn("p-1 bg-yellow-100 rounded-full", className)}>
+      <svg
+        className={cn("w-5 h-5", className)}
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z" />
+      </svg>
+    </div>
+  ),
+  carDetailing: ({ className }: { className?: string }) => (
+    <div className={cn("p-1 bg-red-100 rounded-full", className)}>
+      <svg
+        className={cn("w-5 h-5", className)}
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+      </svg>
+    </div>
+  ),
+};
+
+// Card Icon Component based on service type
+const CardIcon = ({ serviceId }: { serviceId: string }) => {
+  const iconConfig = {
+    lawncare: {
+      bg: "bg-green-100 dark:bg-green-900/50",
+      Component: ServiceIcons.lawncare,
+    },
+    laundry: {
+      bg: "bg-blue-100 dark:bg-blue-900/50",
+      Component: ServiceIcons.laundry,
+    },
+    lighting: {
+      bg: "bg-yellow-100 dark:bg-yellow-900/50",
+      Component: ServiceIcons.lighting,
+    },
+    "car-detailing": {
+      bg: "bg-red-100 dark:bg-red-900/50",
+      Component: ServiceIcons.carDetailing,
+    },
+  };
+
+  const config = iconConfig[serviceId as keyof typeof iconConfig];
+  if (!config) return null;
+
+  return (
+    <div className={`p-1 ${config.bg} rounded-full`}>
+      <config.Component className="w-4 h-4" />
+    </div>
+  );
+};
 
 // Service data
-const servicesData = [
+const servicesData: Service[] = [
   {
     id: "lawncare",
     name: "Lawncare",
     description:
       "Keep your castle grounds immaculate with our professional lawncare service.",
-    icon: ({ className }: { className?: string }) => (
-      <div className={cn("p-1 bg-green-100 rounded-full", className)}>
-        <svg
-          className="w-5 h-5"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M21 14h-2V8h2v6Zm-4 7h-2V8h2v13Zm-8 0H7V3h2v18Zm-4 0H3v-6h2v6Z" />
-        </svg>
-      </div>
-    ),
+    icon: ServiceIcons.lawncare,
     serviceName: "Groundskeeper service",
     tabs: ["0-0.5 acres", "0.6-1 acre", "1+ acres"],
     pricingOptions: [
@@ -125,18 +219,7 @@ const servicesData = [
     name: "Laundry",
     description:
       "Experience the luxury of freshly laundered garments fit for royalty.",
-    icon: ({ className }: { className?: string }) => (
-      <div className={cn("p-1 bg-blue-100 rounded-full", className)}>
-        <svg
-          className="w-5 h-5"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M7 4c0-.55.45-1 1-1s1 .45 1 1-.45 1-1 1-1-.45-1-1m11 15-4-4v-2a2 2 0 1 0-4 0v6H6v-6a6 6 0 0 1 6-6c.68 0 1.34.12 1.95.34l-1.5 1.5A3.94 3.94 0 0 0 12 9c-2.2 0-4 1.8-4 4v2l-4 4h14Z" />
-        </svg>
-      </div>
-    ),
+    icon: ServiceIcons.laundry,
     serviceName: "Royal Wash service",
     tabs: ["One-Time Services", "Monthly Subscription"],
     pricingOptions: [
@@ -193,18 +276,7 @@ const servicesData = [
     name: "Lighting",
     description:
       "Brighten your castle with our expert seasonal lighting solutions.",
-    icon: ({ className }: { className?: string }) => (
-      <div className={cn("p-1 bg-yellow-100 rounded-full", className)}>
-        <svg
-          className="w-5 h-5"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z" />
-        </svg>
-      </div>
-    ),
+    icon: ServiceIcons.lighting,
     serviceName: "Illuminate service",
     tabs: ["Up to 1300 sq ft", "1350-2449 sq ft", "2450+ sq ft"],
     pricingOptions: [
@@ -259,18 +331,7 @@ const servicesData = [
     id: "car-detailing",
     name: "Car Detailing",
     description: "Give your carriage the royal treatment it deserves.",
-    icon: ({ className }: { className?: string }) => (
-      <div className={cn("p-1 bg-red-100 rounded-full", className)}>
-        <svg
-          className="w-5 h-5"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
-        </svg>
-      </div>
-    ),
+    icon: ServiceIcons.carDetailing,
     serviceName: "Royal Shine service",
     tabs: ["Car", "Truck", "SUV"],
     pricingOptions: [
@@ -325,21 +386,98 @@ const servicesData = [
   },
 ];
 
+// Price Option Card Component
+const PriceOptionCard = ({
+  option,
+  serviceId,
+  onAddToCart,
+}: {
+  option: PricingOption;
+  serviceId: string;
+  onAddToCart: (option: PricingOption) => void;
+}) => {
+  return (
+    <Card
+      className={`border-2 flex flex-col h-full ${option.isPopular ? "border-lime-500" : "border-gray-200 dark:border-gray-700"}`}
+    >
+      <CardHeader className="pb-3">
+        {option.isPopular && (
+          <Badge className="w-fit mb-2 bg-lime-500 text-[#0f172a] hover:bg-lime-600">
+            Most Popular
+          </Badge>
+        )}
+        <div className="flex items-center gap-2 mb-1">
+          <CardIcon serviceId={serviceId} />
+          <CardTitle>{option.name}</CardTitle>
+        </div>
+        <p className="text-sm text-muted-foreground">{option.subtitle}</p>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <div className="text-3xl font-bold mb-4">
+          ${option.price}
+          <span className="text-sm font-normal text-muted-foreground">
+            /{option.billingPeriod}
+          </span>
+        </div>
+        <div className="space-y-2 text-sm">
+          <p className="font-medium">This includes:</p>
+          <ul className="space-y-2">
+            {option.features.map((feature, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <Check className="h-4 w-4 text-lime-500 shrink-0 mt-0.5" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </CardContent>
+      <CardFooter>
+        {option.isComing ? (
+          <div className="w-full">
+            <p className="text-sm text-center mb-2">Coming Soon</p>
+            <div className="flex flex-col space-y-2">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 border-lime-500/50 focus-visible:ring-lime-500"
+              />
+              <Button className="w-full bg-[#0f172a] hover:bg-[#1e293b] border border-lime-500 text-white">
+                Notify Me
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button
+            className="w-full bg-[#0f172a] hover:bg-[#1e293b] border border-lime-500 text-white"
+            onClick={() => onAddToCart(option)}
+          >
+            {option.billingPeriod === "month" ||
+            option.billingPeriod === "3 months"
+              ? "Subscribe"
+              : "Add to Order"}
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
+  );
+};
+
 export default function ServicesSection() {
   const [activeTab, setActiveTab] = useState<Record<string, string>>(() => {
     return servicesData.reduce(
       (acc, service) => {
         if (service.tabs && service.tabs.length > 0) {
-          acc[service.id] = service.tabs[0];
+          acc[service.id] = service.tabs[0] || "";
         }
         return acc;
       },
       {} as Record<string, string>
     );
   });
+
   const { addToCart } = useCart();
 
-  const handleAddToCart = (option: any) => {
+  const handleAddToCart = (option: PricingOption) => {
     addToCart({
       id: option.id,
       name: option.name,
@@ -349,22 +487,37 @@ export default function ServicesSection() {
     });
   };
 
+  // More maintainable filtering function that uses service and tab metadata
   const getFilteredOptions = (
-    service: (typeof servicesData)[0],
+    service: Service,
     tabIndex: number
-  ) => {
-    switch (service.id) {
-      case "lawncare":
-        return tabIndex === 2
-          ? [service.pricingOptions[4]] // Show only commercial option for last tab
-          : service.pricingOptions.slice(tabIndex * 2, tabIndex * 2 + 2); // Show two cards for first two tabs
-      case "laundry":
-        return tabIndex === 0
-          ? service.pricingOptions.slice(0, 2) // Show first two options for "One-Time Services"
-          : [service.pricingOptions[2]]; // Show only the supreme option for "Monthly Subscription"
-      default:
-        return [service.pricingOptions[tabIndex]]; // For Car Detailing and Lighting, show one per tab
-    }
+  ): PricingOption[] => {
+    // Data-driven filtering based on service id
+    const filterMap = {
+      lawncare: (idx: number) => {
+        if (idx === 2)
+          return [service.pricingOptions[4]].filter(Boolean) as PricingOption[]; // 1+ acres tab
+        return service.pricingOptions
+          .slice(idx * 2, idx * 2 + 2)
+          .filter(Boolean) as PricingOption[]; // First two tabs
+      },
+      laundry: (idx: number) => {
+        if (idx === 0)
+          return service.pricingOptions
+            .slice(0, 2)
+            .filter(Boolean) as PricingOption[]; // One-Time Services
+        return [service.pricingOptions[2]].filter(Boolean) as PricingOption[]; // Monthly Subscription
+      },
+      default: (idx: number) => {
+        // Ensure we have a valid index and return a filtered array of valid options
+        const option = service.pricingOptions[idx];
+        return option ? [option] : [];
+      },
+    };
+
+    const filterFn =
+      filterMap[service.id as keyof typeof filterMap] || filterMap.default;
+    return filterFn(tabIndex);
   };
 
   return (
@@ -432,7 +585,7 @@ export default function ServicesSection() {
                     className="space-y-4"
                   >
                     <TabsList className="grid grid-cols-3 w-full md:w-auto bg-gray-100 dark:bg-gray-800">
-                      {service.tabs.map((tab) => (
+                      {service.tabs?.map((tab) => (
                         <TabsTrigger
                           key={tab}
                           value={tab}
@@ -443,130 +596,17 @@ export default function ServicesSection() {
                       ))}
                     </TabsList>
 
-                    {service.tabs.map((tab, tabIndex) => (
+                    {service.tabs?.map((tab, tabIndex) => (
                       <TabsContent key={tab} value={tab} className="space-y-4">
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {getFilteredOptions(service, tabIndex).map(
                             (option) => (
-                              <Card
+                              <PriceOptionCard
                                 key={option.id}
-                                className={`border-2 flex flex-col h-full ${option.isPopular ? "border-lime-500" : "border-gray-200 dark:border-gray-700"}`}
-                              >
-                                <CardHeader className="pb-3">
-                                  {option.isPopular && (
-                                    <Badge className="w-fit mb-2 bg-lime-500 text-[#0f172a] hover:bg-lime-600">
-                                      Most Popular
-                                    </Badge>
-                                  )}
-                                  <div className="flex items-center gap-2 mb-1">
-                                    {service.id === "lawncare" && (
-                                      <div className="p-1 bg-green-100 dark:bg-green-900/50 rounded-full">
-                                        <svg
-                                          className="w-4 h-4"
-                                          fill="currentColor"
-                                          viewBox="0 0 24 24"
-                                          xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                          <path d="M21 14h-2V8h2v6Zm-4 7h-2V8h2v13Zm-8 0H7V3h2v18Zm-4 0H3v-6h2v6Z" />
-                                        </svg>
-                                      </div>
-                                    )}
-                                    {service.id === "laundry" && (
-                                      <div className="p-1 bg-blue-100 dark:bg-blue-900/50 rounded-full">
-                                        <svg
-                                          className="w-4 h-4"
-                                          fill="currentColor"
-                                          viewBox="0 0 24 24"
-                                          xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                          <path d="M7 4c0-.55.45-1 1-1s1 .45 1 1-.45 1-1 1-1-.45-1-1m11 15-4-4v-2a2 2 0 1 0-4 0v6H6v-6a6 6 0 0 1 6-6c.68 0 1.34.12 1.95.34l-1.5 1.5A3.94 3.94 0 0 0 12 9c-2.2 0-4 1.8-4 4v2l-4 4h14Z" />
-                                        </svg>
-                                      </div>
-                                    )}
-                                    {service.id === "lighting" && (
-                                      <div className="p-1 bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
-                                        <svg
-                                          className="w-4 h-4"
-                                          fill="currentColor"
-                                          viewBox="0 0 24 24"
-                                          xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                          <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z" />
-                                        </svg>
-                                      </div>
-                                    )}
-                                    {service.id === "car-detailing" && (
-                                      <div className="p-1 bg-red-100 dark:bg-red-900/50 rounded-full">
-                                        <svg
-                                          className="w-4 h-4"
-                                          fill="currentColor"
-                                          viewBox="0 0 24 24"
-                                          xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
-                                        </svg>
-                                      </div>
-                                    )}
-                                    <CardTitle>{option.name}</CardTitle>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground">
-                                    {option.subtitle}
-                                  </p>
-                                </CardHeader>
-                                <CardContent className="flex-grow">
-                                  <div className="text-3xl font-bold mb-4">
-                                    ${option.price}
-                                    <span className="text-sm font-normal text-muted-foreground">
-                                      /{option.billingPeriod}
-                                    </span>
-                                  </div>
-                                  <div className="space-y-2 text-sm">
-                                    <p className="font-medium">
-                                      This includes:
-                                    </p>
-                                    <ul className="space-y-2">
-                                      {option.features.map((feature, i) => (
-                                        <li
-                                          key={i}
-                                          className="flex items-start gap-2"
-                                        >
-                                          <Check className="h-4 w-4 text-lime-500 shrink-0 mt-0.5" />
-                                          <span>{feature}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                </CardContent>
-                                <CardFooter>
-                                  {option.isComing ? (
-                                    <div className="w-full">
-                                      <p className="text-sm text-center mb-2">
-                                        Coming Soon
-                                      </p>
-                                      <div className="flex flex-col space-y-2">
-                                        <Input
-                                          type="email"
-                                          placeholder="Enter your email"
-                                          className="flex-1 border-lime-500/50 focus-visible:ring-lime-500"
-                                        />
-                                        <Button className="w-full bg-[#0f172a] hover:bg-[#1e293b] border border-lime-500 text-white">
-                                          Notify Me
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <Button
-                                      className="w-full bg-[#0f172a] hover:bg-[#1e293b] border border-lime-500 text-white"
-                                      onClick={() => handleAddToCart(option)}
-                                    >
-                                      {option.billingPeriod === "month" ||
-                                      option.billingPeriod === "3 months"
-                                        ? "Subscribe"
-                                        : "Add to Order"}
-                                    </Button>
-                                  )}
-                                </CardFooter>
-                              </Card>
+                                option={option}
+                                serviceId={service.id}
+                                onAddToCart={handleAddToCart}
+                              />
                             )
                           )}
                         </div>
